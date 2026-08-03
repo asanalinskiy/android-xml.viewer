@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android XML Viewer</title>
+    <link rel="icon" href="https://bit.ly/4bpZlCy">
+    <style>
+        :root {
+            --as-bg: #1e1f22;
+            --as-panel: #2b2d30;
+            --as-border: #383b3d;
+            --as-text: #bcbec4;
+            --as-text-bright: #dfe1e5;
+            --as-accent: #3574f0;
+            --as-accent-hover: #4682f9;
+            --as-code-bg: #1e1f22;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--as-bg);
+            color: var(--as-text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        /* Top Toolbar */
+        .toolbar {
+            height: 40px;
+            background-color: var(--as-panel);
+            border-bottom: 1px solid var(--as-border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 15px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--as-text-bright);
+        }
+
+        .logo-area span {
+            color: #4382ec;
+            font-size: 16px;
+        }
+
+        .tool-btn {
+            background: transparent;
+            border: 1px solid var(--as-border);
+            color: var(--as-text);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .tool-btn:hover {
+            background-color: #383b3d;
+            color: var(--as-text-bright);
+        }
+
+        .tool-btn.primary {
+            background-color: var(--as-accent);
+            color: white;
+            border: none;
+        }
+
+        .tool-btn.primary:hover {
+            background-color: var(--as-accent-hover);
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Project Tree */
+        .sidebar {
+            width: 240px;
+            background-color: var(--as-panel);
+            border-right: 1px solid var(--as-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 8px 12px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--as-border);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-tree {
+            padding: 8px;
+            list-style: none;
+        }
+
+        .file-tree li {
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--as-text-bright);
+        }
+
+        .file-tree li.active {
+            background-color: #45494e;
+        }
+
+        /* Split Editor / Preview Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            background-color: var(--as-code-bg);
+        }
+
+        .code-pane, .preview-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--as-border);
+        }
+
+        .pane-header {
+            height: 30px;
+            background-color: var(--as-panel);
+            border-bottom: 1px solid var(--as-border);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .pane-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        textarea {
+            flex: 1;
+            background-color: var(--as-code-bg);
+            color: #a9b7c6;
+            border: none;
+            padding: 12px;
+            resize: none;
+            font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        /* Android Emulator Frame */
+        .emulator-viewport {
+            flex: 1;
+            background-color: #141415;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .phone-frame {
+            width: 300px;
+            height: 580px;
+            background-color: #000;
+            border-radius: 36px;
+            border: 8px solid #333;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-speaker {
+            width: 80px;
+            height: 16px;
+            background-color: #333;
+            align-self: center;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .phone-screen {
+            flex: 1;
+            background-color: #ffffff;
+            margin-top: 24px;
+            position: relative;
+            overflow-y: auto;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pipeline Status Bar */
+        .status-bar {
+            height: 24px;
+            background-color: var(--as-panel);
+            border-top: 1px solid var(--as-border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            justify-content: space-between;
+            color: #7a7e85;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #6aab73;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Android Studio Toolbar -->
+    <div class="toolbar">
+        <div class="logo-area">
+            <span><img src="https://bit.ly/4bpZlCy" width=15/></span> Android Studio Viewer
+        </div>
+        <button class="tool-btn primary" onclick="runPipeline()">▶ Render Layout</button>
+        <button class="tool-btn" onclick="loadSample('linear')">XML: Linear</button>
+        <button class="tool-btn" onclick="loadSample('constraint')">XML: Constraint</button>
+        <div style="flex: 1;"></div>
+        <button class="tool-btn" onclick="toggleJsonView()">JSON Inspector</button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <!-- Project Explorer -->
+        <div class="sidebar">
+            <div class="sidebar-header">Project</div>
+            <ul class="file-tree">
+                <li class="active"><img src="https://win11.blueedge.me/img/icon/explorer.png" width=15/> res/layout/activity_main.xml</li>
+            </ul>
+        </div>
+
+        <!-- Editor & Preview Grid -->
+        <div class="editor-container">
+            <!-- XML Code Pane -->
+            <div class="code-pane">
+                <div class="pane-header">
+                    <span class="pane-title"><img src="https://win11.blueedge.me/img/icon/notepad.png" width=15/> activity_main.xml</span>
+                </div>
+                <textarea id="xmlInput" spellcheck="false"></textarea>
+            </div>
+
+            <!-- Virtual Device / Emulator Pane -->
+            <div class="preview-pane">
+                <div class="pane-header">
+                    <span class="pane-title"><img src="telephone.png" width=15/> Emulator (Pixel 5 API 33)</span>
+                </div>
+                <div class="emulator-viewport">
+                    <div class="phone-frame">
+                        <div class="phone-speaker"></div>
+                        <div class="phone-screen" id="emulatorScreen">
+                            <!-- Сюда динамически инжектится сгенерированный UI -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="dot"></div>
+            <span>schema.asanalinskiy.dev/xml2json/json2htmlcss/htmlcss2screen-emulator</span>
+        </div>
+        <div>Asanalinskiy</div>
+    </div>
+
+    <script>
+        // Примеры Android XML layouts
+        const samples = {
+            linear: `<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#F5F6F8">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Добро пожаловать!"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#1F2328"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ваш запрос..."
+        android:background="#FFFFFF"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Отправить в облако"
+        android:backgroundTint="#3574F0"
+        android:textColor="#FFFFFF"
+        android:padding="12dp" />
+
+</LinearLayout>`,
+
+            constraint: `<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#121212">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚡ Cloudflare Edge"
+        android:textSize="20sp"
+        android:textColor="#00FF66"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:text="🚀 Запустить узел"
+        android:padding="10dp" />
+
+</LinearLayout>`
+        };
+
+        function loadSample(type) {
+            document.getElementById('xmlInput').value = samples[type];
+            runPipeline();
+        }
+
+        // ШАГ 1: XML ➔ JSON (Фронтенд-парсер)
+        function parseXmlToJson(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+
+            function convertNode(node) {
+                if (node.nodeType === 3) return null; // Текстовые узлы пропустим
+                
+                let obj = {
+                    tag: node.nodeName,
+                    attributes: {},
+                    children: []
+                };
+
+                // Забираем атрибуты
+                if (node.attributes) {
+                    for (let attr of node.attributes) {
+                        let name = attr.name.replace('android:', '');
+                        obj.attributes[name] = attr.value;
+                    }
+                }
+
+                // Рекурсивно собираем дочерние элементы
+                for (let child of node.childNodes) {
+                    if (child.nodeType === 1) {
+                        let parsedChild = convertNode(child);
+                        if (parsedChild) obj.children.push(parsedChild);
+                    }
+                }
+
+                return obj;
+            }
+
+            return convertNode(xmlDoc.documentElement);
+        }
+
+        // ШАГ 2: JSON ➔ HTML/CSS ➔ Эмулятор
+        function renderJsonToHtml(jsonNode) {
+            if (!jsonNode) return document.createElement('div');
+
+            const el = document.createElement('div');
+            const attrs = jsonNode.attributes;
+
+            // Базовые стили Android View
+            el.style.display = 'flex';
+            el.style.boxSizing = 'border-box';
+
+            // Размеры (match_parent / wrap_content / dp)
+            el.style.width = attrs.layout_width === 'match_parent' ? '100%' : 'auto';
+            el.style.height = attrs.layout_height === 'match_parent' ? '100%' : 'auto';
+
+            // Отступы (padding)
+            if (attrs.padding) {
+                el.style.padding = attrs.padding.replace('dp', 'px');
+            }
+            if (attrs.layout_marginBottom) {
+                el.style.marginBottom = attrs.layout_marginBottom.replace('dp', 'px');
+            }
+
+            // Цвет фона
+            if (attrs.background) {
+                el.style.backgroundColor = attrs.background;
+            }
+
+            // Рендерим по тегам Android компонентов
+            if (jsonNode.tag === 'LinearLayout') {
+                el.style.flexDirection = attrs.orientation === 'horizontal' ? 'row' : 'column';
+                if (attrs.gravity === 'center') {
+                    el.style.justifyContent = 'center';
+                    el.style.alignItems = 'center';
+                }
+            } 
+            else if (jsonNode.tag === 'TextView') {
+                el.innerText = attrs.text || '';
+                el.style.fontSize = attrs.textSize ? (parseInt(attrs.textSize) + 'px') : '14px';
+                el.style.color = attrs.textColor || '#000000';
+                if (attrs.textStyle === 'bold') {
+                    el.style.fontWeight = 'bold';
+                }
+            } 
+            else if (jsonNode.tag === 'Button') {
+                el.innerText = attrs.text || 'Button';
+                el.style.backgroundColor = attrs.backgroundTint || '#6200EE';
+                el.style.color = attrs.textColor || '#FFFFFF';
+                el.style.padding = '10px 16px';
+                el.style.borderRadius = '8px';
+                el.style.border = 'none';
+                el.style.cursor = 'pointer';
+                el.style.justifyContent = 'center';
+                el.style.alignItems = 'center';
+                el.style.textAlign = 'center';
+            } 
+            else if (jsonNode.tag === 'EditText') {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = attrs.hint || '';
+                input.style.width = '100%';
+                input.style.padding = '10px';
+                input.style.border = '1px solid #ccc';
+                input.style.borderRadius = '6px';
+                input.style.fontSize = '14px';
+                if (attrs.background) input.style.backgroundColor = attrs.background;
+                el.appendChild(input);
+            }
+
+            // Рендерим дочерние элементы
+            if (jsonNode.children && jsonNode.children.length > 0) {
+                jsonNode.children.forEach(child => {
+                    el.appendChild(renderJsonToHtml(child));
+                });
+            }
+
+            return el;
+        }
+
+        // Запуск полного пайплайна за наносекунды
+        function runPipeline() {
+            const xmlCode = document.getElementById('xmlInput').value;
+            const startTime = performance.now();
+
+            try {
+                // 1. XML ➔ JSON
+                const jsonLayout = parseXmlToJson(xmlCode);
+                
+                // 2. JSON ➔ HTML/CSS ➔ Эмулятор
+                const screen = document.getElementById('emulatorScreen');
+                screen.innerHTML = '';
+                const renderedDom = renderJsonToHtml(jsonLayout);
+                screen.appendChild(renderedDom);
+
+                const endTime = performance.now();
+                const duration = (endTime - startTime).toFixed(2);
+                document.getElementById('fpsCounterinnerText').innerText = `Pipeline: ${duration} ms`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function toggleJsonView() {
+            const xmlCode = document.getElementById('xmlInput').value;
+            const json = parseXmlToJson(xmlCode);
+            alert(JSON.stringify(json, null, 2));
+        }
+
+        // Автозапуск при старте
+        window.onload = () => {
+            loadSample('linear');
+        };
+    </script>
+</body>
+</html>
