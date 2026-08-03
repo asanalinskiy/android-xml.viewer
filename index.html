@@ -584,14 +584,16 @@ function executeJavaLogic(screenElement) {
         
         if (clickRegex.test(javaCode)) {
             domEl.onclick = () => {
+                if (typeof domEl._counter === 'undefined') {
+                    domEl._counter = 0;
+                }
+                domEl._counter++;
+                
+                // Находим TextView на экране и обновляем его текст
                 for (let textVar in elementsMap) {
                     if (textVar !== varName) {
                         const targetEl = elementsMap[textVar];
-                        if (javaCode.includes('++')) {
-                            if (typeof domEl._counter === 'undefined') domEl._counter = 0;
-                            domEl._counter++;
-                            targetEl.innerText = domEl._counter;
-                        }
+                        targetEl.innerText = domEl._counter;
                     }
                 }
             };
