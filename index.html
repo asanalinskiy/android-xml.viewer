@@ -271,6 +271,7 @@
             <div class="sidebar-header">Project</div>
             <ul class="file-tree">
                 <li class="active"><img src="https://win11.blueedge.me/img/icon/explorer.png" width=15/> res/layout/activity_main.xml</li>
+                <li onclick="switchFile('java')"><img src="https://win11.blueedge.me/img/icon/explorer.png" width=15/> java
             </ul>
         </div>
 
@@ -282,6 +283,7 @@
                     <span class="pane-title"><img src="https://win11.blueedge.me/img/icon/notepad.png" width=15/> activity_main.xml</span>
                 </div>
                 <textarea id="xmlInput" spellcheck="false"></textarea>
+                <textarea id="javaImput spellcheck="false" style="display:none;"></textarea>
             </div>
 
             <!-- Virtual Device / Emulator Pane -->
@@ -522,6 +524,16 @@
             const json = parseXmlToJson(xmlCode);
             alert(JSON.stringify(json, null, 2));
         }
+
+        function switchFile(type) {
+    if (type === 'xml') {
+        document.getElementById('xmlInput').style.display = 'block';
+        document.getElementById('javaInput').style.display = 'none';
+    } else {
+        document.getElementById('xmlInput').style.display = 'none';
+        document.getElementById('javaInput').style.display = 'block';
+    }
+}
 
         // Автозапуск при старте
         window.onload = () => {
