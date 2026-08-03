@@ -527,7 +527,9 @@ textarea.active {
                 executeJavaLogic(document.getElementById('emulatorScreen'));
                 const endTime = performance.now();
                 const duration = (endTime - startTime).toFixed(2);
-                document.getElementById('fpsCounterinnerText').innerText = `Pipeline: ${duration} ms`;
+                const fpsEL = document.getElementById('fpsCounterinnerText');
+                if (fpsEL) {
+                    fpsEL.innerText = `Pipeline ${duration} ms`
             } catch (err) {
                 console.error(err);
             }
