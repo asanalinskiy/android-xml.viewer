@@ -161,18 +161,23 @@
             gap: 6px;
         }
 
-        textarea {
-            flex: 1;
-            background-color: var(--as-code-bg);
-            color: #a9b7c6;
-            border: none;
-            padding: 12px;
-            resize: none;
-            font-family: "JetBrains Mono", Menlo, Consolas, monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            outline: none;
-        }
+    textarea {
+        flex: 1;
+        background-color: var(--as-code-bg);
+        color: #a9b7c6;
+        border: none;
+        padding: 12px;
+        resize: none;
+        font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        outline: none;
+        display: none;
+}
+
+textarea.active {
+    display: block;
+}
 
         /* Android Emulator Frame */
         .emulator-viewport {
@@ -270,9 +275,13 @@
         <div class="sidebar">
             <div class="sidebar-header">Project</div>
             <ul class="file-tree">
-                <li class="active"><img src="https://win11.blueedge.me/img/icon/explorer.png" width=15/> res/layout/activity_main.xml</li>
-                <li onclick="switchFile('java')"><img src="https://win11.blueedge.me/img/icon/explorer.png" width=15/> java
-            </ul>
+                <li id="tab-xml" class="active" onclick="switchFile('xml')">
+                    <img src="https://win11.bluededge.me/img/icon/explorer.png" width="15"> res/layout/activity_main.xml
+                </li>
+                <li id="tab-java" onclick="switchFile('java')">
+                    <img src="https://win11.bluededge.me/img/icon/explorer.png" width="15"> java/MainActivity.java
+                </li>
+</ul>
         </div>
 
         <!-- Editor & Preview Grid -->
@@ -280,11 +289,15 @@
             <!-- XML Code Pane -->
             <div class="code-pane">
                 <div class="pane-header">
-                    <span class="pane-title"><img src="https://win11.blueedge.me/img/icon/notepad.png" width=15/> activity_main.xml</span>
+                    <span class="pane-title" id="paneTitle">
+                        <img src="https://win11.bluededge.me/img/icon/notepad.png" width="15"> activity_main.xml
+                    </span>
                 </div>
-                <textarea id="xmlInput" spellcheck="false"></textarea>
-                <textarea id="javaImput spellcheck="false" style="display:none;"></textarea>
-            </div>
+                <textarea id="xmlInput" class="active" spellcheck="false"></textarea>
+                <textarea id="javaInput" spellcheck="false">public class MainActivity extends AppCompatActivity {
+    // Пиши Java логику здесь
+}</textarea>
+</div>
 
             <!-- Virtual Device / Emulator Pane -->
             <div class="preview-pane">
@@ -526,12 +539,19 @@
         }
 
         function switchFile(type) {
+            document.getElementById('tab-xml').classList.remove('active');
+            document.getElementById('tab-java').classList.remove('active');
+            document.getElementById('xmlInput').classList.remove('active');
+            document.getElementById('javaInput').classList.remove('active');
+
     if (type === 'xml') {
-        document.getElementById('xmlInput').style.display = 'block';
-        document.getElementById('javaInput').style.display = 'none';
+        document.getElementById('tab-xml').classList.add('active');
+        document.getElementById('xmlInput').classList.add('active');
+        document.getElementById('paneTitle').innerHTML = '<img src="https://win11.bluededge.me/img/icon/notepad.png" width="15"> activity_main.xml';
     } else {
-        document.getElementById('xmlInput').style.display = 'none';
-        document.getElementById('javaInput').style.display = 'block';
+        document.getElementById('tab-java').classList.add('active');
+        document.getElementById('javaInput').classList.add('active');
+        document.getElementById('paneTitle').innerHTML = '<img src="https://win11.bluededge.me/img/icon/notepad.png" width="15"> MainActivity.java';
     }
 }
 
