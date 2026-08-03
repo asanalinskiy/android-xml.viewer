@@ -555,6 +555,45 @@ textarea.active {
     }
 }
 
+        // Универсальный интерпретатор Java-логики для эмулятора
+function executeJavaLogic(screenElement) {
+    const javaCode = document.getElementById('javaInput').value;
+
+    // Ищем все привязки findViewById(R.id.elementId)
+    const findViewRegex = /(\w+)\s+(\w+)\s*=\s*findViewById\s*\(\s*R\.id\.(\w+)\s*\);/g;
+    let match;
+    const elementsMap = {};
+
+    while ((match = findViewRegex.exec(javaCode)) !== null) {
+        const varName = match[2];
+        const elementId = match[3];
+        const foundDomEl = screenElement.querySelector(`#${elementId}`);
+        if (foundDomEl) {
+            elementsMap[varName] = foundDomEl;
+        }
+    }
+
+    // Оживляем кнопки с клик-лиенерами
+    for (let varName in elementsMap) {
+        const domEl = elementsMap[varName];
+        const clickRegex = new RegExp(`${varName}\\.setOnClickListener\\s*\\([\\s\\S]*?\\);`, 'g');
+        
+        if (clickRegex.test(javaCode)) {
+            domEl.onclick = () => {
+                for (let textVar in elementsMap) {
+                    if (textVar !== varName) {
+                        const targetEl = elementsMap[textVar];
+                        if (javaCode.includes('++')) {
+                            if (typeof domEl._counter === 'undefined') domEl._counter = 0;
+                            domEl._counter++;
+                            targetEl.innerText = domEl._counter;
+                        }
+                    }
+                }
+            };
+        }
+    }
+}
         // Автозапуск при старте
         window.onload = () => {
             loadSample('linear');
